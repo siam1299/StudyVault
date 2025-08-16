@@ -1,35 +1,90 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Study Vault</title>
-</head>
-<body>
- <!-- Flash messages -->
-  {% if messages %}
-    <ul>
-      {% for m in messages %}
-        <li>{{ m }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+{% extends "base.html" %}
+{% block title %}Home — StudyVault{% endblock %}
+{% block content %}
 
-  <h1>StudyVault</h1>
+  <!-- Hero -->
+  <section class="text-center mb-8">
+    <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">Welcome to StudyVault</h1>
+    <p class="text-gray-600 mt-2">
+      Share and Discover Course Materials — Notes, Slides, Assignments & More
+    </p>
+  </section>
 
-  {% if user.is_authenticated %}
-  <p>Hi, {{ user.username }} |
-    <a href="{% url 'logout' %}">Logout</a> |
-    <a href="/admin/">Admin</a>
-  </p>
-{% else %}
-  <p>
-    <a href="{% url 'login' %}">Login</a> |
-    <a href="{% url 'signup' %}">Sign up</a> |
-    <a href="/admin/">Admin</a>
-  </p>
-{% endif %}
+  <!-- Quick Actions -->
+  <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- Browse -->
+    <a href="#"
+       class="group bg-white rounded-2xl border p-6 hover:shadow-sm transition">
+      <div class="flex items-center gap-4">
+        <!-- icon -->
+        <div class="rounded-xl border p-3 bg-gray-50 group-hover:bg-black group-hover:text-white transition">
+          <!-- Book (inline SVG) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14.5A1.5 1.5 0 0 1 18.5 20H6.5A2.5 2.5 0 0 0 4 22.5V6.5Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M4 6.5A2.5 2.5 0 0 1 6.5 4v14.5A2.5 2.5 0 0 0 4 21.5" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Explore</div>
+          <div class="font-medium">Browse Materials</div>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 mt-3">
+        Filter by department, category, semester (coming soon).
+      </p>
+    </a>
 
+    <!-- Upload (if not logged in, send to login) -->
+    <a href="{% if user.is_authenticated %}#{% else %}{% url 'login' %}{% endif %}"
+       class="group bg-white rounded-2xl border p-6 hover:shadow-sm transition">
+      <div class="flex items-center gap-4">
+        <div class="rounded-xl border p-3 bg-gray-50 group-hover:bg-black group-hover:text-white transition">
+          <!-- Upload Cloud -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M7 20h10a4 4 0 0 0 0-8h-.26A6.5 6.5 0 1 0 7 20Zm5-10v8m0 0-3-3m3 3 3-3" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Contribute</div>
+          <div class="font-medium">Upload Material</div>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 mt-3">
+        Share PDFs, DOCX, PPT, ZIP up to 50MB.
+      </p>
+      {% if not user.is_authenticated %}
+        <p class="mt-2 text-xs text-gray-500">Login required → you’ll be redirected.</p>
+      {% endif %}
+    </a>
 
-  <p>Welcome! Homepage is wired up.</p>
-</body>
-</html>
+    <!-- Admin -->
+    <a href="/admin/"
+       class="group bg-white rounded-2xl border p-6 hover:shadow-sm transition">
+      <div class="flex items-center gap-4">
+        <div class="rounded-xl border p-3 bg-gray-50 group-hover:bg-black group-hover:text-white transition">
+          <!-- Shield -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6"
+               fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M12 3l7 3v6c0 5-3.5 8-7 9-3.5-1-7-4-7-9V6l7-3Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 12l2 2 4-4" />
+          </svg>
+        </div>
+        <div>
+          <div class="text-sm text-gray-500">Manage</div>
+          <div class="font-medium">Admin</div>
+        </div>
+      </div>
+      <p class="text-sm text-gray-600 mt-3">
+        Moderate reports, manage users & categories.
+      </p>
+    </a>
+  </section>
+
+{% endblock %}

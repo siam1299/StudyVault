@@ -1,27 +1,91 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login - StudyVault</title>
-</head>
-<body>
-<h1>Log in</h1>
+{% extends "base.html" %}
+{% block title %}Log in — StudyVault{% endblock %}
 
-  {% if messages %}
-    <ul>
-      {% for m in messages %}
-        <li>{{ m }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
+{% block content %}
+  <!-- Full-height center wrapper -->
+  <div class="min-h-[65vh] grid place-items-center">
+    <div class="w-full max-w-md">
+      <div class="bg-white border rounded-2xl p-7 shadow-sm">
+        <h1 class="text-2xl font-semibold tracking-tight mb-1 text-center">Welcome back</h1>
+        <p class="text-sm text-gray-600 mb-6 text-center">Log in to continue to StudyVault</p>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Log in</button>
-  </form>
+        {% if form.non_field_errors %}
+          <div class="mb-4 rounded-lg border border-red-300 bg-red-50 text-red-800 text-sm px-3 py-2">
+            {{ form.non_field_errors }}
+          </div>
+        {% endif %}
 
-  <p>New here? <a href="{% url 'accounts:signup' %}">Create an account</a></p>
-  <p><a href="{% url 'home' %}">Back to Home</a></p>
-</body>
-</html>
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+
+          <div>
+            <label class="block text-sm mb-1" for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+            {% if form.username.errors %}
+              <p class="text-sm text-red-600 mt-1">{{ form.username.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <div>
+            <label class="block text-sm mb-1" for="{{ form.password.id_for_label }}">Password</label>
+            <div class="relative">
+              {{ form.password }}
+              <!-- Toggle button -->
+              <button type="button" onclick="togglePassword('id_password', this)"
+                      class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
+                      aria-label="Show or hide password">👁</button>
+            </div>
+            {% if form.password.errors %}
+              <p class="text-sm text-red-600 mt-1">{{ form.password.errors|join:", " }}</p>
+            {% endif %}
+          </div>
+
+          <div class="flex items-center justify-between">
+            <a href="{% url 'password_reset' %}" class="text-sm text-blue-600 hover:underline">
+              Forgot password?
+            </a>
+            <button type="submit"
+                    class="inline-flex items-center rounded-md border border-gray-300
+                           px-4 py-2 text-sm font-medium
+                           bg-white text-gray-900
+                           hover:bg-black hover:text-white
+                           transition-colors duration-200">
+              Log in
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <p class="text-sm text-gray-600 mt-4 text-center">
+        New here?
+        <a href="{% url 'signup' %}" class="text-blue-600 hover:underline">Create an account</a>
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // Add Tailwind classes to Django default inputs
+    document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]').forEach(el => {
+      el.classList.add(
+        'w-full','rounded-md','border','border-gray-300',
+        'px-3','py-2','text-[15px]',
+        'focus:outline-none','focus:ring','focus:ring-blue-200'
+      );
+      // add right padding if it is a password field (to make space for eye button)
+      if (el.id === 'id_password') { el.classList.add('pr-10'); }
+    });
+
+    // Show/Hide password
+    function togglePassword(fieldId, btn) {
+      const input = document.getElementById(fieldId);
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+      } else {
+        input.type = "password";
+        btn.textContent = "👁";
+      }
+    }
+  </script>
+{% endblock %}
