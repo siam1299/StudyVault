@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - StudyVault</title>
+</head>
+<body>
+<h1>Log in</h1>
+
+  {% if messages %}
+    <ul>
+      {% for m in messages %}
+        <li>{{ m }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Log in</button>
+  </form>
+
+  <p>New here? <a href="{% url 'accounts:signup' %}">Create an account</a></p>
+  <p><a href="{% url 'home' %}">Back to Home</a></p>
+</body>
+</html>

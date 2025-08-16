@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Study Vault</title>
+</head>
+<body>
+ <!-- Flash messages -->
+  {% if messages %}
+    <ul>
+      {% for m in messages %}
+        <li>{{ m }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+  <h1>StudyVault</h1>
+
+  {% if user.is_authenticated %}
+  <p>Hi, {{ user.username }} |
+    <a href="{% url 'logout' %}">Logout</a> |
+    <a href="/admin/">Admin</a>
+  </p>
+{% else %}
+  <p>
+    <a href="{% url 'login' %}">Login</a> |
+    <a href="{% url 'signup' %}">Sign up</a> |
+    <a href="/admin/">Admin</a>
+  </p>
+{% endif %}
+
+
+  <p>Welcome! Homepage is wired up.</p>
+</body>
+</html>
