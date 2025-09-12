@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load socialaccount %}  {# allauth: provider_login_url ব্যবহার করার জন্য #}
 {% block title %}Log in — StudyVault{% endblock %}
 
 {% block content %}
@@ -9,12 +10,37 @@
         <h1 class="text-2xl font-semibold tracking-tight mb-1 text-center">Welcome back</h1>
         <p class="text-sm text-gray-600 mb-6 text-center">Log in to continue to StudyVault</p>
 
+        <!-- Google Login -->
+        <a href="{% provider_login_url 'google' %}"
+           class="w-full inline-flex items-center justify-center rounded-md border border-gray-300
+                  px-4 py-2 text-sm font-medium
+                  bg-white text-gray-900
+                  hover:bg-black hover:text-white
+                  transition-colors duration-200">
+          <!-- Google "G" icon (svg) -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="mr-2 h-5 w-5" viewBox="0 0 48 48">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 3l5.7-5.7C33.7 7 29.1 5 24 5 12.9 5 4 13.9 4 25s8.9 20 20 20 20-8.9 20-20c0-1.5-.2-3-.4-4.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.6 18.9 13 24 13c3 0 5.7 1.1 7.8 3l5.7-5.7C33.7 7 29.1 5 24 5 16 5 9.1 9.6 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 45c5 0 9.6-1.9 13-5.1l-6-4.9c-2 1.5-4.7 2.4-7 2.4-5.3 0-9.7-3.4-11.3-8l-6.6 5C9 40.4 16 45 24 45z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.7 2-2.1 3.8-4 5l6 4.9C39.7 40.2 44 33.9 44 25c0-1.5-.2-3-.4-4.5z"/>
+          </svg>
+          Continue with Google
+        </a>
+
+        <!-- Divider -->
+        <div class="my-6 flex items-center">
+          <div class="h-px flex-1 bg-gray-200"></div>
+          <span class="px-3 text-xs text-gray-500">OR</span>
+          <div class="h-px flex-1 bg-gray-200"></div>
+        </div>
+
         {% if form.non_field_errors %}
           <div class="mb-4 rounded-lg border border-red-300 bg-red-50 text-red-800 text-sm px-3 py-2">
             {{ form.non_field_errors }}
           </div>
         {% endif %}
 
+        <!-- Username/Password form -->
         <form method="post" class="space-y-4">
           {% csrf_token %}
 
@@ -30,7 +56,6 @@
             <label class="block text-sm mb-1" for="{{ form.password.id_for_label }}">Password</label>
             <div class="relative">
               {{ form.password }}
-              <!-- Toggle button -->
               <button type="button" onclick="togglePassword('id_password', this)"
                       class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700"
                       aria-label="Show or hide password">👁</button>
@@ -71,7 +96,6 @@
         'px-3','py-2','text-[15px]',
         'focus:outline-none','focus:ring','focus:ring-blue-200'
       );
-      // add right padding if it is a password field (to make space for eye button)
       if (el.id === 'id_password') { el.classList.add('pr-10'); }
     });
 

@@ -33,13 +33,35 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 INSTALLED_APPS = [
     'accounts',
     'studyvault',
+    'materials',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Needed for allauth
+    'django.contrib.sites',
+
+    # allauth core
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # Google provider
+    'allauth.socialaccount.providers.google',
+
 ]
+
+SITE_ID = 1
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Django default
+    'allauth.account.auth_backends.AuthenticationBackend',  # allauth
+]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -47,6 +69,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware', # new added
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -123,4 +146,35 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Google OAuth (allauth) — direct config from settings
+SOCIALACCOUNT_PROVIDERS = {
+    "google": {
+        "SCOPE": ["profile", "email"],
+        "APP": {
+            "client_id": "49311462806-es5n51c06duosckdkt44crgllqu1hk1r.apps.googleusercontent.com",
+            "secret": "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",
+            "key": ""
+        },
+    }
+}
+
+# Allauth behaviour tweaks (dev-friendly)
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+
+# Google থেকে আসা ইউজারের জন্য সাইনআপ স্ক্রিন স্কিপ করতে
+SOCIALACCOUNT_AUTO_SIGNUP = True
+
+# Username দরকার হলে অটো-জেনারেট করো
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USERNAME_GENERATOR = "allauth.account.utils.generate_unique_username"
+
+
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
