@@ -30,68 +30,10 @@
   </style>
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-900 font-sans">
-  <!-- Top Nav -->
-  <header class="bg-white/90 backdrop-blur border-b sticky top-0 z-50">
-    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-      <a href="{% url 'home' %}" class="text-lg sm:text-xl font-semibold tracking-tight">
-        StudyVault
-      </a>
 
-      <!-- Buttons: rounded, default white; hover black + white text -->
-      <nav class="flex items-center gap-2">
-        {% if user.is_authenticated %}
-          <span class="hidden sm:inline text-sm text-gray-600 mr-1">
-            Hi, <b>{{ user.username }}</b>
-          </span>
+<!-- Top Nav -->
+{% include 'partials/navbar.html' %}
 
-          <a href="{% url 'logout' %}"
-             class="inline-flex items-center rounded-md border border-gray-300
-                    px-3 py-1.5 text-sm font-medium
-                    bg-white text-gray-900
-                    hover:bg-black hover:text-white
-                    transition-colors duration-200">
-            Logout
-          </a>
-
-          <a href="/admin/"
-             class="inline-flex items-center rounded-md border border-gray-300
-                    px-3 py-1.5 text-sm font-medium
-                    bg-white text-gray-900
-                    hover:bg-black hover:text-white
-                    transition-colors duration-200">
-            Admin
-          </a>
-        {% else %}
-          <a href="{% url 'login' %}"
-             class="inline-flex items-center rounded-md border border-gray-300
-                    px-3 py-1.5 text-sm font-medium
-                    bg-white text-gray-900
-                    hover:bg-black hover:text-white
-                    transition-colors duration-200">
-            Login
-          </a>
-
-          <a href="{% url 'signup' %}"
-             class="inline-flex items-center rounded-md border border-gray-300
-                    px-3 py-1.5 text-sm font-medium
-                    bg-white text-gray-900
-                    hover:bg-black hover:text-white
-                    transition-colors duration-200">
-            Sign up
-          </a>
-
-          <a href="/admin/"
-             class="hidden sm:inline-flex items-center rounded-md border border-gray-300
-                    px-3 py-1.5 text-sm font-medium
-                    bg-white text-gray-900
-                    hover:bg-black hover:text-white
-                    transition-colors duration-200">
-            Admin
-          </a>
-        {% endif %}
-      </nav>
-    </div>
-  </header>
 
   <!-- Flash messages -->
   {% if messages %}

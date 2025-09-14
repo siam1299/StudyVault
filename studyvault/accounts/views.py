@@ -1,8 +1,12 @@
 # accounts/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required   # ✅ দরকার edit_profile এর জন্য
+
+from .models import UserProfile   # ✅ তোমার model
+from .forms import ProfileForm    # ✅ তোমার form
 
 def signup_view(request):
     if request.method == "POST":
@@ -10,10 +14,9 @@ def signup_view(request):
         if form.is_valid():
             user = form.save()  # user তৈরি হলো
 
-            # ✅ নতুন ৩ লাইন: backend resolve হবে
             raw_password = form.cleaned_data.get("password1")
             user = authenticate(request, username=user.username, password=raw_password)
-            login(request, user)  # backend এখন সেট আছে
+            login(request, user)
 
             messages.success(request, "Account created successfully!")
             return redirect("home")
@@ -39,3 +42,17 @@ def logout_view(request):
     logout(request)
     messages.info(request, "Logged out.")
     return redirect('home')
+
+@login_required
+def edit_profile(request):
+    profile = get_object_or_404(UserProfile, user=request.user)
+
+    if request.method == "POST":
+        form = ProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect("profile", username=request.user.username)
+    else:
+        form = ProfileForm(instance=profile)
+
+    return render(request, "accounts/edit_profile.html", {"form": form})
