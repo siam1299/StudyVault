@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Browse Materials — StudyVault{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <h1 class="text-2xl font-semibold mb-4">Browse Materials</h1>
+
+  <!-- Search -->
+  <form method="get" class="mb-6 flex gap-2">
+    <input type="text" name="q" value="{{ request.GET.q }}"
+           placeholder="Search by title or description..."
+           class="flex-1 rounded-md border px-3 py-2 text-sm">
+    <button type="submit"
+            class="rounded-md border px-4 py-2 text-sm bg-white hover:bg-black hover:text-white">
+      Search
+    </button>
+  </form>
+
+    <!-- CSRF holder (hidden) -->
+<form id="csrf-holder" style="display:none;">{% csrf_token %}</form>
+
+
+  <!-- List -->
+  <div class="space-y-4">
+    {% for m in materials %}
+<div class="border rounded-lg p-4 hover:shadow-sm" data-card="material">
+        <h2 class="font-medium text-lg">
+            {{ m.title }}
+        </h2>
+        <p class="text-sm text-gray-600 mb-2">{{ m.description|truncatewords:25 }}</p>
+        <p class="text-xs text-gray-500 mb-2">
+          {{ m.category.name }} | {{ m.department.name }} | {{ m.semester.name }}
+        </p>
+
+        <!-- 👇 নতুন ব্লক: uploader দেখাবে -->
+        <p class="text-sm text-gray-500 mb-2">
+          Uploaded by
+          <a href="{% url 'profile' m.uploader.username %}"
+             class="underline hover:no-underline hover:text-blue-600">
+            {{ m.uploader.username }}
+          </a>
+          &middot; {{ m.created_at|date:"M j, Y" }}
+        </p>
+
+        <a href="{{ m.file.url }}" class="text-blue-600 hover:underline" download>Download</a>
+        <span class="text-xs text-gray-500">({{ m.download_count }} downloads)</span>
+
+        <!-- Upvote button -->
+<button class="upvote-btn text-sm text-blue-600 underline"
+        data-id="{{ m.pk }}">
+  Upvote (<span data-count="up">{{ m.upvotes.count }}</span>)
+</button>
+
+<!-- Downvote button -->
+<button class="downvote-btn text-sm text-red-600 underline"
+        data-id="{{ m.pk }}">
+  Downvote (<span data-count="down">{{ m.downvotes.count }}</span>)
+</button>
+
+
+
+      </div>
+    {% empty %}
+      <p class="text-gray-600">No materials found.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  <div class="mt-6">
+    {% if materials.has_previous %}
+      <a href="?page={{ materials.previous_page_number }}" class="px-3 py-1 border rounded">Previous</a>
+    {% endif %}
+    <span class="mx-2">Page {{ materials.number }} of {{ materials.paginator.num_pages }}</span>
+    {% if materials.has_next %}
+      <a href="?page={{ materials.next_page_number }}" class="px-3 py-1 border rounded">Next</a>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  // ✅ CSRF token (hidden form থেকে)
+  const csrfInput = document.querySelector('#csrf-holder input[name="csrfmiddlewaretoken"]');
+  const csrftoken = csrfInput ? csrfInput.value : "";
+
+  // প্রতিটা কার্ডে (data-card="material") হ্যান্ডলার লাগাও
+  document.querySelectorAll('[data-card="material"]').forEach(card => {
+    const upBtn   = card.querySelector('.upvote-btn');
+    const downBtn = card.querySelector('.downvote-btn');
+
+    const upSpan   = card.querySelector('[data-count="up"]');
+    const downSpan = card.querySelector('[data-count="down"]');
+
+    function post(url, onDone) {
+      // ডাবল-ক্লিক ঠেকাতে দুই বাটন সাময়িক বন্ধ
+      upBtn.disabled = true;
+      downBtn.disabled = true;
+
+      fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "X-CSRFToken": csrftoken,
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({})
+      })
+      .then(r => r.ok ? r.json() : Promise.reject())
+      .then(data => {
+        // সার্ভার যেটা পাঠায় সেটাই বসাও — দু’দিক একসাথে আপডেট হবে
+        if (data.total_upvotes !== undefined)  upSpan.textContent   = data.total_upvotes;
+        if (data.total_downvotes !== undefined) downSpan.textContent = data.total_downvotes;
+
+        // ইচ্ছা হলে active স্টাইল টগল করতে পারো
+        upBtn.classList.toggle('font-semibold',   data.your_vote === 'up');
+        downBtn.classList.toggle('font-semibold', data.your_vote === 'down');
+      })
+      .catch(() => {
+        alert("Something went wrong. Please try again.");
+      })
+      .finally(() => {
+        upBtn.disabled = false;
+        downBtn.disabled = false;
+      });
+    }
+
+    // Upvote handler
+    upBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = upBtn.dataset.id;
+      post("{% url 'materials:toggle_upvote' 0 %}".replace("0", id));
+    });
+
+    // Downvote handler
+    downBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = downBtn.dataset.id;
+      post("{% url 'materials:toggle_downvote' 0 %}".replace("0", id));
+    });
+  });
+});
+</script>
+
+
+
+{% endblock %}

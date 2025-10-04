@@ -3,14 +3,15 @@
 
 {% block content %}
 <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-  <!-- Left: শুধু Title & Description -->
-  <div class="md:col-span-2 bg-white p-4 rounded-lg shadow">
+
+  <!-- Left: Title & Description -->
+  <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
     <h1 class="text-2xl font-semibold mb-2">{{ material.title }}</h1>
-    <p class="text-sm text-gray-600 mb-4">{{ material.description }}</p>
+    <p class="text-sm text-gray-600">{{ material.description }}</p>
   </div>
 
-  <!-- Right: Info -->
-  <div class="bg-white p-4 rounded-lg shadow">
+  <!-- Right: Info Card -->
+  <div class="bg-white p-6 rounded-lg shadow">
     <p class="text-sm text-gray-500">Uploaded by:</p>
     <a href="{% url 'profile' material.uploader.username %}"
        class="block font-semibold text-lg hover:underline">
@@ -22,11 +23,47 @@
     <p class="text-sm">Semester: {{ material.semester.name }}</p>
     <p class="text-sm mb-4">Uploaded on {{ material.created_at|date:"M j, Y" }}</p>
 
-    <!-- ✅ শুধু Download Button -->
+    <!-- Download Button -->
     <a href="{{ material.file.url }}" download
-       class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+       class="block text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
        Download
     </a>
+
+      <!-- ✅ Upvote button -->
+      <button id="upvote-btn"
+        data-url="{% url 'materials:toggle_upvote' material.pk %}"
+        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+  👍 Upvote (<span id="upvote-count">{{ material.upvotes.count }}</span>)
+</button>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("upvote-btn");
+  const countSpan = document.getElementById("upvote-count");
+
+  btn.addEventListener("click", function (e) {
+    e.preventDefault();
+
+    fetch(btn.dataset.url, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "X-Requested-With": "XMLHttpRequest"
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      countSpan.textContent = data.total_upvotes;
+      if (data.status === "added") {
+        btn.classList.add("bg-green-700");
+      } else {
+        btn.classList.remove("bg-green-700");
+      }
+    });
+  });
+});
+</script>
+
   </div>
 </div>
 {% endblock %}

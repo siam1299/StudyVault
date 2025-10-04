@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Profile — {{ profile_user.username }}{% endblock %}
+{% block content %}
+
+<div class="max-w-2xl mx-auto bg-red-50 rounded-xl shadow p-6">
+  <form method="post" enctype="multipart/form-data" class="space-y-4">
+    {% csrf_token %}
+
+    <div class="flex items-center gap-6">
+      <div class="relative group">
+        {% if profile and profile.avatar %}
+          <img src="{{ profile.avatar.url }}" alt="Avatar"
+               class="w-24 h-24 rounded-full object-cover border">
+        {% else %}
+          <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+            <span class="text-gray-500">No Photo</span>
+          </div>
+        {% endif %}
+        {% if form %}
+          <label for="{{ form.avatar.id_for_label }}"
+                 class="absolute inset-0 flex items-center justify-center
+                        bg-black/50 text-white text-sm opacity-0 group-hover:opacity-100
+                        cursor-pointer rounded-full">
+            Change
+          </label>
+          {{ form.avatar }}
+        {% endif %}
+      </div>
+
+      <div>
+        <h1 class="text-2xl font-semibold">{{ profile_user.username }}</h1>
+        <p class="text-gray-600">{{ profile_user.email }}</p>
+      </div>
+    </div>
+
+    {% if form %}
+      <div>{{ form.university }}</div>
+      <div>{{ form.department }}</div>
+      <button type="submit"
+              class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+        Save Changes
+      </button>
+    {% else %}
+      {% if profile %}
+        <p class="mt-2 text-gray-600">University: {{ profile.university }}</p>
+        <p class="text-gray-600">Department: {{ profile.department }}</p>
+      {% endif %}
+    {% endif %}
+  </form>
+</div>
+
+<div class="grid grid-cols-3 gap-4 text-center mt-6">
+  <div>
+    <div class="text-lg font-bold">{{ profile_user.materials.count }}</div>
+    <div class="text-xs text-gray-500">Uploads</div>
+  </div>
+  <div>
+    <div class="text-lg font-bold">0</div>
+    <div class="text-xs text-gray-500">Followers</div>
+  </div>
+  <div>
+    <div class="text-lg font-bold">0</div>
+    <div class="text-xs text-gray-500">Following</div>
+  </div>
+</div>
+
+
+{% endblock %}

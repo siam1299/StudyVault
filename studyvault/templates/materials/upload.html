@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Upload Material — StudyVault{% endblock %}
+
+{% block content %}
+<div class="min-h-[70vh] grid place-items-center">
+  <div class="w-full max-w-xl">
+    <div class="bg-white border rounded-2xl p-7 shadow-sm">
+      <h1 class="text-2xl font-semibold tracking-tight mb-4 text-center">
+        Upload Course Material
+      </h1>
+
+      <!-- success / error messages -->
+      {% if messages %}
+        <ul class="mb-4">
+          {% for m in messages %}
+            <li class="text-sm text-green-700 bg-green-50 border border-green-300 rounded px-3 py-2 mb-2">
+              {{ m }}
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        {% for field in form %}
+          <div>
+            <label class="block text-sm font-medium mb-1" for="{{ field.id_for_label }}">
+              {{ field.label }}
+            </label>
+            {{ field }}
+            {% if field.help_text %}
+              <p class="text-xs text-gray-500">{{ field.help_text|safe }}</p>
+            {% endif %}
+            {% for error in field.errors %}
+              <p class="text-sm text-red-600">{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endfor %}
+
+        <div class="flex items-center justify-between">
+          <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline">← Back to Home</a>
+          <button type="submit"
+                  class="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium
+                         bg-white text-gray-900 hover:bg-black hover:text-white
+                         transition-colors duration-200">
+            Upload
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // style inputs
+  document.querySelectorAll("input, select, textarea").forEach(el => {
+    if (el.type !== "hidden" && el.type !== "submit") {
+      el.classList.add(
+        "w-full","rounded-md","border","border-gray-300",
+        "px-3","py-2","text-[15px]",
+        "focus:outline-none","focus:ring","focus:ring-blue-200"
+      );
+    }
+  });
+</script>
+{% endblock %}

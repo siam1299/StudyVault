@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load i18n socialaccount %}
+
+{% block title %}Social Connections — StudyVault{% endblock %}
+
+{% block content %}
+  <div class="min-h-[65vh] grid place-items-center">
+    <div class="w-full max-w-2xl">
+      <div class="bg-white border rounded-2xl p-7 shadow-sm">
+        <h1 class="text-2xl font-semibold tracking-tight mb-1 text-center">Social Connections</h1>
+        <p class="text-sm text-gray-600 mb-6 text-center">
+          Link your StudyVault account with your Google account. You can remove the link anytime.
+        </p>
+
+        <!-- Connected accounts (if any) -->
+        {% if form.accounts %}
+          <form method="post" action="{% url 'socialaccount_connections' %}">
+            {% csrf_token %}
+            <div class="mb-4">
+              <h2 class="text-base font-medium mb-2">Connected accounts</h2>
+              <ul class="space-y-2">
+                {% for a in form.accounts %}
+                  <li class="flex items-center justify-between rounded-lg border px-4 py-3">
+                    <div class="flex items-center gap-3">
+                      <div class="w-9 h-9 rounded-full border grid place-items-center bg-gray-50">
+                        <!-- Simple provider “G” -->
+                        <span class="font-semibold">G</span>
+                      </div>
+                      <div>
+                        <div class="font-medium">{{ a.get_provider.name }}</div>
+                        <div class="text-sm text-gray-600">{{ a }}</div>
+                      </div>
+                    </div>
+
+                    <!-- select radio to disconnect -->
+                    <label class="inline-flex items-center gap-2">
+                      <input class="sr-only" type="radio" name="account" value="{{ a.id }}">
+                      <span class="text-xs text-gray-500">selected for removal</span>
+                    </label>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+
+            <div class="flex items-center justify-end">
+              <button type="submit" name="action" value="disconnect"
+                      class="inline-flex items-center rounded-md border border-gray-300
+                             px-4 py-2 text-sm font-medium
+                             bg-white text-gray-900
+                             hover:bg-black hover:text-white
+                             transition-colors duration-200">
+                Remove selected
+              </button>
+            </div>
+          </form>
+        {% else %}
+          <div class="rounded-lg border bg-gray-50 px-4 py-3 text-sm text-gray-700 mb-6">
+            No social accounts connected yet.
+          </div>
+        {% endif %}
+
+        <!-- Available providers to connect -->
+        <div class="mt-6">
+          <h2 class="text-base font-medium mb-2">Connect a new provider</h2>
+          {% providers_media_js %}
+          {% get_providers as socialaccount_providers %}
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {% for provider in socialaccount_providers %}
+              {% if provider.id == "openid" %}
+                {# skip openid generic #}
+              {% else %}
+                <a href="{% provider_login_url provider.id process='connect' %}"
+                   class="group rounded-xl border p-4 hover:shadow-sm transition flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full border grid place-items-center bg-gray-50 group-hover:bg-black group-hover:text-white transition">
+                      {% if provider.id == "google" %}
+                        <span class="font-semibold">G</span>
+                      {% else %}
+                        <span class="font-semibold">{{ provider.name|first }}</span>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <div class="font-medium">Connect {{ provider.name }}</div>
+                      <div class="text-xs text-gray-500">Secure OAuth sign-in</div>
+                    </div>
+                  </div>
+                  <span class="text-sm text-blue-600">Connect →</span>
+                </a>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mt-6 text-center">
+          <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline">Back to Home</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Make radios visible only when there are multiple; otherwise auto-select the single account
+    (function () {
+      const radios = document.querySelectorAll('input[type="radio"][name="account"]');
+      if (radios.length === 1) {
+        radios[0].checked = true;
+        const hint = document.querySelector('span.text-xs.text-gray-500');
+        if (hint) hint.textContent = 'ready to remove';
+      }
+    })();
+  </script>
+{% endblock %}
