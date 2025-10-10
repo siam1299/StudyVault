@@ -57,6 +57,38 @@
   Downvote (<span data-count="down">{{ m.downvotes.count }}</span>)
 </button>
 
+<div class="mt-4">
+  <h3 class="text-sm font-semibold mb-2" data-comments-count>
+    Comments ({{ m.comments.count }})
+  </h3>
+
+  <ul id="comments-{{ m.pk }}" class="bg-gray-50 rounded border divide-y">
+    {% for c in m.comments.all %}
+      {% include "materials/_comment.html" with c=c %}
+    {% empty %}
+      <li class="p-3 text-sm text-gray-500">No comments yet.</li>
+    {% endfor %}
+  </ul>
+
+  {% if user.is_authenticated %}
+    <form class="comment-form mt-3" data-id="{{ m.pk }}">
+        <textarea name="body" rows="2"
+          class="w-full border rounded px-3 py-2 text-sm"
+          placeholder="Write a comment…"></textarea>
+
+      <div class="mt-2">
+        <button type="submit"
+                class="px-3 py-1.5 text-sm border rounded hover:bg-black hover:text-white">
+          Add comment
+        </button>
+      </div>
+    </form>
+  {% else %}
+    <p class="text-xs text-gray-500 mt-2">
+      Please <a href="{% url 'login' %}" class="underline">log in</a> to comment.
+    </p>
+  {% endif %}
+</div>
 
 
       </div>
@@ -139,6 +171,123 @@ document.addEventListener("DOMContentLoaded", function () {
       post("{% url 'materials:toggle_downvote' 0 %}".replace("0", id));
     });
   });
+
+  // ✅ Comment submit (AJAX) — DEBUG ভার্সন
+document.querySelectorAll(".comment-form").forEach(form => {
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const materialId = this.dataset.id;
+    const textarea = this.querySelector('textarea[name="body"]');
+    const text = (textarea.value || "").trim();
+    if (!text) return; // ফাঁকা হলে সাবমিট করবো না
+
+    fetch("{% url 'materials:add_comment' 0 %}".replace("0", materialId), {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "X-CSRFToken": csrftoken,
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+        body: new URLSearchParams({ body: text })
+    })
+    .then(async (r) => {
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        // ❗ সার্ভারের form.errors এখানে দেখা যাবে
+        alert("Could not add comment.\n" + (data && data.errors ? JSON.stringify(data.errors) : ""));
+        console.log("Comment form errors:", data);
+        throw new Error("comment failed");
+      }
+      return data;
+    })
+    .then(data => {
+      // ✅ সফল হলে পুরোনো মতই UI আপডেট
+      const ul = document.getElementById(`comments-${materialId}`);
+      const empty = ul.querySelector(".p-3.text-sm.text-gray-500");
+      if (empty) empty.remove();
+      ul.insertAdjacentHTML("beforeend", data.html);
+      textarea.value = "";
+      const countEl = this.closest('[data-card="material"]').querySelector("[data-comments-count]");
+      if (countEl) countEl.textContent = `Comments (${data.count})`;
+    })
+    .catch(() => { /* already alerted */ });
+  });
+});
+
+// 1) Reply ফর্ম টগল (show/hide)
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.reply-toggle');
+    if (!btn) return;
+
+    e.preventDefault();
+    const parentId = btn.dataset.parent;                 // যেটাতে reply দিচ্ছি তার আইডি
+    const li = document.getElementById(`comment-${parentId}`);
+    const form = li ? li.querySelector('.reply-form') : null;
+    if (form) {
+      form.classList.toggle('hidden');
+      if (!form.classList.contains('hidden')) {
+        const ta = form.querySelector('textarea[name="body"]');
+        if (ta) ta.focus();
+      }
+    }
+  });
+
+  // 2) Reply ফর্ম cancel
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.reply-cancel');
+    if (!btn) return;
+
+    e.preventDefault();
+    const form = btn.closest('.reply-form');
+    if (form) form.classList.add('hidden');
+  });
+
+  // 3) Reply সাবমিট (AJAX)
+  document.addEventListener('submit', function (e) {
+    const form = e.target.closest('.reply-form');
+    if (!form) return;
+
+    e.preventDefault();
+
+    const materialId = form.dataset.id;
+    const parentId   = form.dataset.parent;
+    const textarea   = form.querySelector('textarea[name="body"]');
+    const body       = (textarea.value || '').trim();
+    if (!body) return;
+
+    fetch("{% url 'materials:add_reply' 0 %}".replace("0", materialId), {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "X-CSRFToken": csrftoken,                 // তোমার আগের কোডে ডিফাইন করা আছে
+        "X-Requested-With": "XMLHttpRequest",
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body: new URLSearchParams({ body, parent_id: parentId })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (!data.ok) throw new Error("reply failed");
+
+      // parent LI খুঁজে child UL না থাকলে বানাই, তারপর নতুন reply ঢুকাই
+      const parentLi = document.getElementById(`comment-${parentId}`);
+      let childrenUl = parentLi ? parentLi.querySelector('ul') : null;
+      if (!childrenUl) {
+        childrenUl = document.createElement('ul');
+        childrenUl.className = 'mt-3 pl-4 border-l';
+        parentLi.appendChild(childrenUl);
+      }
+      childrenUl.insertAdjacentHTML('beforeend', data.html);
+
+      textarea.value = '';
+      form.classList.add('hidden');
+    })
+    .catch(() => alert("Could not post reply. Please try again."));
+  });
+
+
 });
 </script>
 

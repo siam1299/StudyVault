@@ -197,14 +197,24 @@ class Comment(models.Model):
         related_name='material_comments'
     )
     body = models.TextField(max_length=2000)
+
+    # ✅ নতুন: threaded replies
+    parent = models.ForeignKey(
+        'self',
+        null=True,
+        blank=True,
+        related_name='children',
+        on_delete=models.CASCADE,
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']  # নতুন কমেন্ট আগে
+        # তুমি যেমন রাখছিলে তেমনই থাকলো—নতুন কমেন্ট আগে দেখাতে
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"Comment by {self.user} on {self.material} ({self.created_at:%Y-%m-%d})"
-
 
 class University(TimeStampedModel):
     """

@@ -14,5 +14,14 @@ urlpatterns = [
     path("<int:pk>/upvote/", views.toggle_upvote, name="toggle_upvote"),
     # 👇 নতুন (Downvote)
     path("<int:pk>/downvote/", views.toggle_downvote, name="toggle_downvote"),
+    # comments
+    path("<int:pk>/comment/", views.add_comment, name="add_comment"),
+
+    # materials/urls.py
+    path("<int:pk>/reply/", views.add_reply, name="add_reply"),
+    path("comment/<int:pk>/delete/", views.delete_comment, name="delete_comment"),
+
+    # ✅ নতুন
+    path("comment/<int:comment_id>/delete/", views.delete_comment, name="delete_comment"),
 
 ]

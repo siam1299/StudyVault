@@ -11,6 +11,7 @@ from .models import Downvote
 from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 from .forms import CommentForm
+from .models import Comment
 
 
 
@@ -148,3 +149,65 @@ def add_comment(request, pk):
         html = render_to_string("materials/_comment.html", {"c": c}, request=request)
         return JsonResponse({"ok": True, "html": html, "count": material.comments.count()})
     return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+
+
+@login_required
+@require_POST
+def add_reply(request, pk):
+    """
+    AJAX reply handler.
+    Expect: body, parent_id  (x-www-form-urlencoded)
+    """
+    material = get_object_or_404(Material, pk=pk)
+
+    body = (request.POST.get("body") or "").strip()
+    parent_id = request.POST.get("parent_id")
+
+    # বেসিক ভ্যালিডেশন
+    if not body:
+        return JsonResponse({"ok": False, "errors": {"body": ["This field is required."]}}, status=400)
+    if not parent_id:
+        return JsonResponse({"ok": False, "errors": {"parent_id": ["Missing parent_id."]}}, status=400)
+
+    # parent কমেন্ট অবশ্যই এই material-এর হতে হবে
+    parent = get_object_or_404(Comment, pk=parent_id, material=material)
+
+    # সেভ
+    c = Comment.objects.create(
+        material=material,
+        user=request.user,
+        body=body,
+        parent=parent,
+    )
+
+    # নতুন রিপ্লাইয়ের HTML পার্শিয়াল রেন্ডার
+    html = render_to_string("materials/_comment.html", {"c": c}, request=request)
+    return JsonResponse({"ok": True, "html": html})
+
+
+@login_required
+@require_POST
+def delete_comment(request, comment_id):
+    """
+    কেবল কমেন্টের মালিক (বা staff) মুছতে পারবে।
+    JSON রেসপন্স: ok, deleted_id, count
+    """
+    c = get_object_or_404(Comment, pk=comment_id)
+
+    # Permission check
+    if (c.user_id != request.user.id) and (not request.user.is_staff):
+        return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
+
+    material = c.material
+    c.delete()
+
+    return JsonResponse({
+        "ok": True,
+        "deleted_id": comment_id,
+        "count": material.comments.count(),
+    })
+
+
+
+
+
