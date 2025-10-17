@@ -56,6 +56,36 @@
   letter-spacing: .1px;          /* হালকা স্পেসিং পড়তে আরামদায়ক */
 }
 
+/* Search button: round + 3-color gradient 
+.btn-search {
+  background: linear-gradient(90deg, #0052d4, #4364f7, #6fb1fc);
+} */
+  
+/* Search button: white default, gradient on hover */
+.btn-search {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 15px; /* search bar এর সাথে মানানসই */
+  color: #000;
+  background-color: #fff;
+  border: 1px solid #d1d5db; /* light gray border */
+  border-radius: 9999px; /* rounded-full effect */
+  height: 48px;
+  padding: 0 24px;
+  transition: all 0.3s ease;
+}
+
+.btn-search:hover {
+  color: #fff;
+  background: linear-gradient(90deg, #0052d4, #4364f7);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  transform: translateY(-1px); /* hover করলে হালকা উপরে উঠবে */
+
+}
+  
+
+
 
   
 </style>
@@ -85,7 +115,7 @@
     html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   </style>
 </head>
-<body class="min-h-screen bg-gray-50 text-gray-900 font-sans">
+<body class="min-h-screen bg-[#F0E4D3] text-gray-900 font-sans">
 
 <!-- Top Nav -->
 {% include 'partials/navbar.html' %}

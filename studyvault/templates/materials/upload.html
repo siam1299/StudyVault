@@ -27,19 +27,49 @@
         {{ form.non_field_errors }}
 
         {% for field in form %}
-          <div>
-            <label class="block text-sm font-medium mb-1" for="{{ field.id_for_label }}">
-              {{ field.label }}
-            </label>
-            {{ field }}
-            {% if field.help_text %}
-              <p class="text-xs text-gray-500">{{ field.help_text|safe }}</p>
-            {% endif %}
-            {% for error in field.errors %}
-              <p class="text-sm text-red-600">{{ error }}</p>
-            {% endfor %}
+  {% if field.field.widget.input_type == "file" %}
+    {# ✅ Keep the real file input (hidden via CSS), but don't render its label/help #}
+    {{ field }}
+    {# (ঐচ্ছিক) ফাইল-সম্পর্কিত error দেখাতে চাইলে এটা রাখো #}
+    {% for error in field.errors %}
+      <p class="text-sm text-red-600">{{ error }}</p>
+    {% endfor %}
+  {% else %}
+    <div>
+      <label class="block text-sm font-medium mb-1" for="{{ field.id_for_label }}">
+        {{ field.label }}
+      </label>
+      {{ field }}
+      {% if field.help_text %}
+        <p class="text-xs text-gray-500">{{ field.help_text|safe }}</p>
+      {% endif %}
+      {% for error in field.errors %}
+        <p class="text-sm text-red-600">{{ error }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endfor %}
+
+
+        <!-- ✅ Modern Upload Box (NotebookLM-style) -->
+        <div class="mt-10 bg-white rounded-2xl border-2 border-dashed border-gray-300 p-8 text-center shadow-sm hover:shadow-md transition">
+          <div class="flex flex-col items-center justify-center space-y-4">
+            <!-- Upload Icon -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M12 4v12m0 0-3-3m3 3 3-3M4 18h16" />
+            </svg>
+
+            <!-- Upload text -->
+            <div>
+              <p class="text-gray-700 font-medium">Upload sources</p>
+              <p class="text-sm text-gray-500 mt-1">
+                Drag & drop or <a href="#" class="text-indigo-600 hover:underline">choose file</a> to upload
+              </p>
+              <p class="text-xs text-gray-400 mt-2">Supported file types: PDF, DOCX, PPTX, XLSX, ZIP (Max 50MB)</p>
+            </div>
           </div>
-        {% endfor %}
+        </div>
 
         <div class="flex items-center justify-between">
           <a href="{% url 'home' %}" class="text-sm text-blue-600 hover:underline">← Back to Home</a>
@@ -54,17 +84,58 @@
     </div>
   </div>
 </div>
+    
+    <style>
+  /* Hide Django's default file input field (since we made our own upload UI) */
+  input[type="file"] {
+    display: none !important;
+  }
+</style>
+
 
 <script>
-  // style inputs
-  document.querySelectorAll("input, select, textarea").forEach(el => {
-    if (el.type !== "hidden" && el.type !== "submit") {
-      el.classList.add(
-        "w-full","rounded-md","border","border-gray-300",
-        "px-3","py-2","text-[15px]",
-        "focus:outline-none","focus:ring","focus:ring-blue-200"
-      );
+  document.addEventListener("DOMContentLoaded", () => {
+    // style inputs
+    document.querySelectorAll("input, select, textarea").forEach(el => {
+      if (el.type !== "hidden" && el.type !== "submit") {
+        el.classList.add(
+          "w-full","rounded-md","border","border-gray-300",
+          "px-3","py-2","text-[15px]",
+          "focus:outline-none","focus:ring","focus:ring-blue-200"
+        );
+      }
+    });
+
+    // Make "choose file" link trigger the real input[type=file]
+    const chooseLink = document.querySelector(".text-indigo-600.hover\\:underline");
+    const realFileInput = document.querySelector("input[type='file']");
+
+    if (chooseLink && realFileInput) {
+      chooseLink.addEventListener("click", (e) => {
+        e.preventDefault();            // prevent scroll to top
+        realFileInput.click();         // open actual file input
+      });
+    }
+
+    // Show selected file name under upload box
+    const uploadBox = document.querySelector(".border-dashed");
+    if (uploadBox && realFileInput) {
+      const fileNameDisplay = document.createElement("p");
+      fileNameDisplay.className = "text-sm text-gray-600 mt-3";
+      uploadBox.appendChild(fileNameDisplay);
+
+      realFileInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          fileNameDisplay.textContent = `Selected: ${file.name}`;
+          fileNameDisplay.classList.add("text-green-700", "font-medium");
+        } else {
+          fileNameDisplay.textContent = "";
+          fileNameDisplay.classList.remove("text-green-700","font-medium");
+        }
+      });
     }
   });
 </script>
+
 {% endblock %}
