@@ -93,13 +93,11 @@ def material_detail(request, pk):
 def toggle_upvote(request, pk):
     material = get_object_or_404(Material, pk=pk)
 
-    # যদি আগে থেকেই upvote থাকে → তুলে দাও (toggle off)
     existing = Upvote.objects.filter(user=request.user, material=material)
     if existing.exists():
         existing.delete()
         your_vote = "none"
     else:
-        # downvote থাকলে আগে সেটা তুলে দাও (mutually exclusive)
         Downvote.objects.filter(user=request.user, material=material).delete()
         Upvote.objects.create(user=request.user, material=material)
         your_vote = "up"
@@ -116,13 +114,11 @@ def toggle_upvote(request, pk):
 def toggle_downvote(request, pk):
     material = get_object_or_404(Material, pk=pk)
 
-    # যদি আগে থেকেই downvote থাকে → তুলে দাও (toggle off)
     existing = Downvote.objects.filter(user=request.user, material=material)
     if existing.exists():
         existing.delete()
         your_vote = "none"
     else:
-        # upvote থাকলে আগে সেটা তুলে দাও (mutually exclusive)
         Upvote.objects.filter(user=request.user, material=material).delete()
         Downvote.objects.create(user=request.user, material=material)
         your_vote = "down"
@@ -145,7 +141,6 @@ def add_comment(request, pk):
         c.material = material
         c.user = request.user
         c.save()
-        # একটার HTML পার্শিয়াল রেন্ডার করে ফেরত দেব (পরের ধাপে ফাইল বানাব)
         html = render_to_string("materials/_comment.html", {"c": c}, request=request)
         return JsonResponse({"ok": True, "html": html, "count": material.comments.count()})
     return JsonResponse({"ok": False, "errors": form.errors}, status=400)
@@ -163,16 +158,13 @@ def add_reply(request, pk):
     body = (request.POST.get("body") or "").strip()
     parent_id = request.POST.get("parent_id")
 
-    # বেসিক ভ্যালিডেশন
     if not body:
         return JsonResponse({"ok": False, "errors": {"body": ["This field is required."]}}, status=400)
     if not parent_id:
         return JsonResponse({"ok": False, "errors": {"parent_id": ["Missing parent_id."]}}, status=400)
 
-    # parent কমেন্ট অবশ্যই এই material-এর হতে হবে
     parent = get_object_or_404(Comment, pk=parent_id, material=material)
 
-    # সেভ
     c = Comment.objects.create(
         material=material,
         user=request.user,
@@ -180,7 +172,6 @@ def add_reply(request, pk):
         parent=parent,
     )
 
-    # নতুন রিপ্লাইয়ের HTML পার্শিয়াল রেন্ডার
     html = render_to_string("materials/_comment.html", {"c": c}, request=request)
     return JsonResponse({"ok": True, "html": html})
 
@@ -189,23 +180,16 @@ def add_reply(request, pk):
 @require_POST
 def delete_comment(request, comment_id):
     """
-    কেবল কমেন্টের মালিক (বা staff) মুছতে পারবে।
-    JSON রেসপন্স: ok, deleted_id, count
+    Delete a comment (owner or staff only). Returns JSON.
     """
     c = get_object_or_404(Comment, pk=comment_id)
 
-    # Permission check
     if (c.user_id != request.user.id) and (not request.user.is_staff):
         return JsonResponse({"ok": False, "error": "forbidden"}, status=403)
 
-    material = c.material
+    cid = c.id
     c.delete()
-
-    return JsonResponse({
-        "ok": True,
-        "deleted_id": comment_id,
-        "count": material.comments.count(),
-    })
+    return JsonResponse({"ok": True, "comment_id": cid})
 
 
 

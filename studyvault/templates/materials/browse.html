@@ -288,6 +288,58 @@ document.querySelectorAll(".comment-form").forEach(form => {
   });
 
 
+ // 🗑️ Delete comment (DEBUG: show status & response)
+document.addEventListener("click", function (e) {
+  const btn = e.target.closest(".comment-delete");
+  if (!btn) return;
+
+  e.preventDefault();
+  const commentId = btn.dataset.comment;
+  if (!confirm("Delete this comment?")) return;
+
+  const url = "{% url 'materials:delete_comment' 0 %}".replace("0", commentId);
+
+  fetch(url, {
+    method: "POST",
+    credentials: "same-origin",
+    headers: {
+      "X-CSRFToken": csrftoken,
+      "X-Requested-With": "XMLHttpRequest",
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({})
+  })
+  .then(async (r) => {
+    const text = await r.text(); // raw দেখব
+    let data = {};
+    try { data = JSON.parse(text); } catch (_) {}
+    if (!r.ok) {
+      alert(`DELETE failed.\nStatus: ${r.status}\nBody: ${text}`);
+      throw new Error("delete failed");
+    }
+    if (!data.ok) {
+      alert(`Server said not ok.\nPayload: ${text}`);
+      throw new Error("delete not ok");
+    }
+    // ✅ সফল: UI থেকে কমেন্ট সরাই
+    const li = document.getElementById(`comment-${data.comment_id}`);
+    if (li) {
+      const card = li.closest('[data-card="material"]');
+      li.remove();
+      const countEl = card ? card.querySelector("[data-comments-count]") : null;
+      if (countEl) {
+        const m = countEl.textContent.match(/\d+/);
+        if (m) countEl.textContent = `Comments (${Math.max(0, parseInt(m[0], 10) - 1)})`;
+      }
+    }
+  })
+  .catch((err) => {
+    // console এও রাখি
+    console.error("Delete error:", err);
+  });
+});
+
+
 });
 </script>
 

@@ -1,47 +1,63 @@
-<li id="comment-{{ c.id }}" class="p-3 text-sm">
-  <!-- header: name • time • (Delete if owner/staff) -->
-  <div class="flex items-center gap-2 text-gray-700">
-    <span class="font-medium">{{ c.user.username }}</span>
-    <span class="text-gray-400">• {{ c.created_at|timesince }} ago</span>
+{# templates/materials/_comment.html #}
+<li class="p-3" id="comment-{{ c.id }}">
+  <!-- header: author + time + (delete button if owner/staff) -->
+  <div class="flex items-center justify-between">
+    <div class="text-sm text-gray-700">
+      <a href="{% url 'profile' c.user.username %}" class="font-medium hover:underline">
+        {{ c.user.username }}
+      </a>
+      <span class="text-xs text-gray-500">• {{ c.created_at|timesince }} ago</span>
+    </div>
 
-    {% if user.is_authenticated and (user.id == c.user_id or user.is_staff) %}
+      {% if user.is_staff or user.is_authenticated and user.id == c.user_id %}
       <button
         type="button"
-        class="ml-auto text-red-600 hover:underline comment-delete"
-        data-id="{{ c.id }}">
+        class="comment-delete text-xs text-red-600 underline"
+        data-comment="{{ c.id }}">
         Delete
       </button>
     {% endif %}
   </div>
 
   <!-- body -->
-  <p class="mt-1 whitespace-pre-line">{{ c.body }}</p>
-
-  <!-- reply toggle -->
-  <div class="mt-2">
-    <a href="#" class="text-xs underline text-gray-600 reply-toggle" data-parent="{{ c.id }}">Reply</a>
+  <div class="mt-1 text-[15px] leading-relaxed">
+    {{ c.body|linebreaksbr }}
   </div>
 
-  <!-- nested replies (if any) -->
+  <!-- actions: Reply -->
+  <div class="mt-2 text-xs">
+    <button class="reply-toggle underline"
+            data-material="{{ c.material_id }}"
+            data-parent="{{ c.id }}">
+      Reply
+    </button>
+  </div>
+
+  <!-- inline reply form (hidden by default) -->
+  <form class="reply-form mt-2 hidden"
+        data-id="{{ c.material_id }}"
+        data-parent="{{ c.id }}">
+    <textarea name="body" rows="2"
+              class="w-full border rounded px-2 py-1 text-sm"
+              placeholder="Write a reply…"></textarea>
+    <div class="mt-1 space-x-2">
+      <button type="submit"
+              class="px-2 py-1 border rounded text-xs hover:bg-black hover:text-white">
+        Reply
+      </button>
+      <button type="button"
+              class="px-2 py-1 border rounded text-xs reply-cancel">
+        Cancel
+      </button>
+    </div>
+  </form>
+
+  <!-- children (nested replies) -->
   {% if c.children.all %}
     <ul class="mt-3 pl-4 border-l">
-      {% for child in c.children.all %}
-        {% include "materials/_comment.html" with c=child %}
+      {% for c in c.children.all %}
+        {% include "materials/_comment.html" with c=c only %}
       {% endfor %}
     </ul>
   {% endif %}
-
-  <!-- inline reply form (hidden by default) -->
-  <form class="reply-form mt-2 hidden" data-id="{{ c.material_id }}" data-parent="{{ c.id }}">
-    <textarea name="body" rows="2"
-              class="w-full border rounded px-3 py-2 text-sm"
-              placeholder="Write a reply…"></textarea>
-    <div class="mt-2 flex items-center gap-2">
-      <button type="submit"
-              class="px-3 py-1.5 text-sm border rounded hover:bg-black hover:text-white">
-        Reply
-      </button>
-      <button type="button" class="reply-cancel text-xs underline">Cancel</button>
-    </div>
-  </form>
 </li>
