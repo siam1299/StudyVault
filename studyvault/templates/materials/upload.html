@@ -109,23 +109,22 @@
     // Make "choose file" link trigger the real input[type=file]
     const chooseLink = document.querySelector(".text-indigo-600.hover\\:underline");
     const realFileInput = document.querySelector("input[type='file']");
+    const dropZone = document.querySelector(".border-dashed");
 
     if (chooseLink && realFileInput) {
       chooseLink.addEventListener("click", (e) => {
-        e.preventDefault();            // prevent scroll to top
-        realFileInput.click();         // open actual file input
+        e.preventDefault();
+        realFileInput.click();
       });
     }
 
     // Show selected file name under upload box
-    const uploadBox = document.querySelector(".border-dashed");
-    if (uploadBox && realFileInput) {
+    if (dropZone && realFileInput) {
       const fileNameDisplay = document.createElement("p");
       fileNameDisplay.className = "text-sm text-gray-600 mt-3";
-      uploadBox.appendChild(fileNameDisplay);
+      dropZone.appendChild(fileNameDisplay);
 
-      realFileInput.addEventListener("change", (e) => {
-        const file = e.target.files[0];
+      const showFileName = (file) => {
         if (file) {
           fileNameDisplay.textContent = `Selected: ${file.name}`;
           fileNameDisplay.classList.add("text-green-700", "font-medium");
@@ -133,9 +132,36 @@
           fileNameDisplay.textContent = "";
           fileNameDisplay.classList.remove("text-green-700","font-medium");
         }
+      };
+
+      // File chosen manually
+      realFileInput.addEventListener("change", (e) => {
+        showFileName(e.target.files[0]);
+      });
+
+      // ✅ Drag & Drop support
+      dropZone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-indigo-400", "bg-indigo-50/50");
+      });
+
+      dropZone.addEventListener("dragleave", () => {
+        dropZone.classList.remove("border-indigo-400", "bg-indigo-50/50");
+      });
+
+      dropZone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-indigo-400", "bg-indigo-50/50");
+
+        const file = e.dataTransfer.files[0];
+        if (file) {
+          realFileInput.files = e.dataTransfer.files;
+          showFileName(file);
+        }
       });
     }
   });
 </script>
+
 
 {% endblock %}
