@@ -4,6 +4,62 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{% block title %}StudyVault{% endblock %}</title>
+  <!-- Playfair Display (900) -->
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&display=swap" rel="stylesheet">
+<!-- Poppins 900 (Black) for hero heading -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+
+
+<style>
+  .logo-text {
+    font-family: 'Playfair Display', serif !important;
+    font-weight: 900 !important;          /* force Black weight */
+    font-size: 28px;
+    line-height: 1.1;
+    letter-spacing: .5px;
+
+    /* Gradient text */
+    background: linear-gradient(to right, #0099f7, #f11712);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;  /* gradient visible */
+    color: transparent;
+    
+    /* optional: slightly thicker look on some screens */
+    text-rendering: optimizeLegibility;
+  }
+  
+   /* Hero heading: Poppins 900 + purple gradient */
+.hero-title {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 700 !important;         /* Black 900 */
+  font-size: clamp(28px, 6vw, 56px);   /* responsive size */
+  line-height: 1.1;
+  letter-spacing: .2px;
+
+  /* Gradient color: #6441a5 -> #2a0845 */
+  background: linear-gradient(to right, #6441a5, #2a0845);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+
+  /* slight render boost */
+  text-rendering: optimizeLegibility;
+}
+
+.hero-subtitle {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 400 !important;   /* আগে যদি বেশি লাগে, 400=normal */
+  color: #000 !important;
+  line-height: 1.4;
+  letter-spacing: .1px;          /* হালকা স্পেসিং পড়তে আরামদায়ক */
+}
+
+
+  
+</style>
+
 
   <!-- Tailwind (CDN for dev) -->
   <script src="https://cdn.tailwindcss.com"></script>
