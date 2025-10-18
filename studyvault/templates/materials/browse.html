@@ -53,20 +53,21 @@
  <div class="mt-3 flex items-center gap-3 text-sm">
 
   <!-- ✅ Download Button -->
-  <a href="{{ m.file.url }}" download
-     class="group inline-flex items-center gap-2 px-3 py-1 rounded-full
-            border border-[#04BF45] text-[#04BF45] bg-white
-            text-[13px] font-medium transition-all duration-150
-            hover:bg-[#029836] hover:text-white hover:border-[#029836]
-            hover:shadow-sm hover:-translate-y-[1px]">
-    <svg xmlns="http://www.w3.org/2000/svg"
-         class="w-3 h-3 transition-transform duration-150 group-hover:translate-x-0.5"
-         fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M4 12h16m0 0-6-6m6 6-6 6"/>
-    </svg>
-    <span class="font-semibold" data-download-count="{{ m.pk }}">{{ m.download_count }}</span>
-  </a>
+  <a href="{% url 'materials:download' m.pk %}" download
+   class="group inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+          border border-[#04BF45] text-[#04BF45] bg-white
+          text-[13px] font-medium transition-all duration-150
+          hover:bg-[#029836] hover:text-white hover:border-[#029836]
+          hover:shadow-sm hover:translate-y-[-1px]">
+  <span>Download</span>
+  <span
+    class="ml-1.5 text-xs rounded-full px-2 py-[1px]
+           bg-[#e6f5f8] text-[#0b6b73] group-hover:bg-white group-hover:text-[#0b6b73]"
+    data-count="download">
+    {{ m.download_count }}
+  </span>
+</a>
+
 
   <!-- Separator -->
   <span class="text-gray-300 select-none">|</span>
@@ -393,22 +394,47 @@ document.addEventListener("click", function (e) {
 });
 </script>
 
-<!-- ✅ Download count increment -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  document.querySelectorAll("a[download]").forEach(link => {
-    link.addEventListener("click", function () {
-        const countText = this.querySelector("[data-download-count]");
-      if (!countText) return;
+document.addEventListener("DOMContentLoaded", function() {
+  const csrfInput = document.querySelector('#csrf-holder input[name="csrfmiddlewaretoken"]');
+  const csrftoken = csrfInput ? csrfInput.value : "";
 
-      fetch(this.href, { method: "HEAD" }).then(() => {
-        let current = parseInt(countText.textContent) || 0;
-        countText.textContent = `${current + 1} downloads`;
-      }).catch(() => {});
+  document.querySelectorAll(".download-btn").forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const id = this.dataset.id;
+      const countSpan = this.querySelector('[data-count="download"]');
+
+      fetch(`{% url 'materials:download' 0 %}`.replace("0", id), {
+        method: "GET",
+        credentials: "same-origin",
+        headers: { "X-CSRFToken": csrftoken }
+      })
+      .then(r => {
+        if (!r.ok) throw new Error("Download failed");
+        // কাউন্ট লাইভ আপডেট
+        countSpan.textContent = String(parseInt(countSpan.textContent || "0", 10) + 1);
+        // ফাইল ডাউনলোড শুরু
+        return r.blob();
+      })
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = ""; // filename রেসপন্স থেকে আসবে
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(() => alert("File not available for download."));
     });
   });
 });
 </script>
+
+<!-- ✅ Download count increment -->
+
 
     </div> <!-- container box close -->
 </div> <!-- outer wrapper close -->

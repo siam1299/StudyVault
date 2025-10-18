@@ -1,4 +1,5 @@
 # materials/views.py
+from django.http import FileResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -12,6 +13,8 @@ from django.views.decorators.http import require_POST
 from django.template.loader import render_to_string
 from .forms import CommentForm
 from .models import Comment
+from django.db.models import F
+import mimetypes, os
 
 
 
@@ -87,7 +90,6 @@ def material_detail(request, pk):
         "file_type": file_type,
     })
 
-@login_required
 @require_POST
 @login_required
 def toggle_upvote(request, pk):
@@ -192,6 +194,19 @@ def delete_comment(request, comment_id):
     return JsonResponse({"ok": True, "comment_id": cid})
 
 
+def download_file(request, pk):
+    material = get_object_or_404(Material, pk=pk)
+    file_path = material.file.path  # ধরে নিচ্ছি field নাম file
 
+    if not os.path.exists(file_path):
+        raise Http404("File not found")
 
+    # ✅ Download count increase
+    material.download_count = F('download_count') + 1
+    material.save(update_fields=['download_count'])
+    material.refresh_from_db(fields=['download_count'])  # আপডেট রিফ্রেশ
 
+    # ✅ File response তৈরি
+    response = FileResponse(open(file_path, 'rb'), as_attachment=True)
+    response['Content-Disposition'] = f'attachment; filename="{os.path.basename(file_path)}"'
+    return response

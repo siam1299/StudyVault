@@ -23,19 +23,33 @@
     <p class="text-sm">Semester: {{ material.semester.name }}</p>
     <p class="text-sm mb-4">Uploaded on {{ material.created_at|date:"M j, Y" }}</p>
 
-    <!-- Download Button -->
-    <a href="{{ material.file.url }}" download
-       class="block text-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-       Download
+    <!-- ✅ Updated Download Button -->
+    <a href="{% url 'materials:download' material.pk %}"
+       class="download-btn group inline-flex items-center gap-1.5 px-3 py-1 rounded-full
+              border border-[#04BF45] text-[#04BF45] bg-white
+              text-[13px] font-medium transition-all duration-150
+              hover:bg-[#029836] hover:text-white hover:border-[#029836]
+              hover:shadow-sm hover:translate-y-[-1px]"
+       data-id="{{ material.pk }}">
+      <span>Download</span>
+      <span
+        class="ml-1.5 text-xs rounded-full px-2 py-[1px]
+               bg-[#e6f5f8] text-[#0b6b73] group-hover:bg-white group-hover:text-[#0b6b73]"
+        data-count="download">
+        {{ material.download_count }}
+      </span>
     </a>
 
-      <!-- ✅ Upvote button -->
-      <button id="upvote-btn"
-        data-url="{% url 'materials:toggle_upvote' material.pk %}"
-        class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
-  👍 Upvote (<span id="upvote-count">{{ material.upvotes.count }}</span>)
-</button>
+    <!-- ✅ Upvote button -->
+    <button id="upvote-btn"
+      data-url="{% url 'materials:toggle_upvote' material.pk %}"
+      class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700">
+      👍 Upvote (<span id="upvote-count">{{ material.upvotes.count }}</span>)
+    </button>
+  </div>
+</div>
 
+<!-- ✅ Upvote Script -->
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("upvote-btn");
@@ -64,6 +78,42 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-  </div>
-</div>
+<!-- ✅ Download Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  document.querySelectorAll(".download-btn").forEach(btn => {
+    btn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const id = this.dataset.id;
+      const countSpan = this.querySelector('[data-count="download"]');
+      
+      fetch(`{% url 'materials:download' 0 %}`.replace("0", id))
+        .then(r => {
+          if (!r.ok) throw new Error("Download failed");
+          countSpan.textContent = String(parseInt(countSpan.textContent || "0", 10) + 1);
+          return r.blob().then(blob => ({blob, filename: getFilenameFromDisposition(r)}));
+        })
+        .then(({blob, filename}) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = filename || "downloaded_file";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(url);
+        })
+        .catch(() => alert("File not available for download."));
+    });
+  });
+
+  function getFilenameFromDisposition(response) {
+    const header = response.headers.get("Content-Disposition");
+    if (!header) return null;
+    const match = header.match(/filename="?([^"]+)"?/);
+    return match ? match[1] : null;
+  }
+});
+</script>
+
 {% endblock %}
