@@ -1,68 +1,126 @@
 {% extends "base.html" %}
-{% block title %}Profile — {{ profile_user.username }}{% endblock %}
+{% block title %}Profile — StudyVault{% endblock %}
+
 {% block content %}
+<div class="max-w-3xl mx-auto py-10">
+  <div class="bg-white border rounded-2xl shadow-lg p-8">
 
-<div class="max-w-2xl mx-auto bg-red-50 rounded-xl shadow p-6">
-  <form method="post" enctype="multipart/form-data" class="space-y-4">
-    {% csrf_token %}
+    <h1 class="text-2xl font-semibold mb-6 text-center">My Profile</h1>
 
-    <div class="flex items-center gap-6">
-      <div class="relative group">
-        {% if profile and profile.avatar %}
-          <img src="{{ profile.avatar.url }}" alt="Avatar"
-               class="w-24 h-24 rounded-full object-cover border">
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+      {% csrf_token %}
+    
+    <!-- Heading + user info + Edit button -->
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <h1 class="text-2xl font-semibold">{{ user.username }}</h1>
+    <p class="text-gray-600">{{ user.email }}</p>
+  </div>
+
+  <button type="button" id="edit-toggle"
+          class="px-4 py-2 rounded-md border hover:bg-black hover:text-white">
+    Edit
+  </button>
+</div>
+
+
+      <!-- Avatar -->
+      <div class="text-center">
+        {% if profile.avatar %}
+          <img src="{{ profile.avatar.url }}" alt="Avatar" class="w-32 h-32 rounded-full mx-auto border mb-3 object-cover">
         {% else %}
-          <div class="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
-            <span class="text-gray-500">No Photo</span>
+          <div class="w-32 h-32 rounded-full mx-auto bg-gray-200 border mb-3 flex items-center justify-center text-gray-500 text-sm">
+            No Photo
           </div>
         {% endif %}
-        {% if form %}
-          <label for="{{ form.avatar.id_for_label }}"
-                 class="absolute inset-0 flex items-center justify-center
-                        bg-black/50 text-white text-sm opacity-0 group-hover:opacity-100
-                        cursor-pointer rounded-full">
-            Change
-          </label>
-          {{ form.avatar }}
-        {% endif %}
-      </div>
+        <label id="avatar-change-label"
+       for="{{ form.avatar.id_for_label }}"
+       class="cursor-pointer inline-block text-sm text-blue-600 hover:underline">
+  Change Photo
+</label>
+{{ form.avatar }}
 
-      <div>
-        <h1 class="text-2xl font-semibold">{{ profile_user.username }}</h1>
-        <p class="text-gray-600">{{ profile_user.email }}</p>
-      </div>
-    </div>
-
-    {% if form %}
-      <div>{{ form.university }}</div>
-      <div>{{ form.department }}</div>
-      <button type="submit"
-              class="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-        Save Changes
-      </button>
-    {% else %}
-      {% if profile %}
-        <p class="mt-2 text-gray-600">University: {{ profile.university }}</p>
-        <p class="text-gray-600">Department: {{ profile.department }}</p>
-      {% endif %}
-    {% endif %}
-  </form>
 </div>
 
-<div class="grid grid-cols-3 gap-4 text-center mt-6">
+     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
   <div>
-    <div class="text-lg font-bold">{{ profile_user.materials.count }}</div>
-    <div class="text-xs text-gray-500">Uploads</div>
+    {{ form.university.label_tag }}
+    {{ form.university }}
   </div>
   <div>
-    <div class="text-lg font-bold">0</div>
-    <div class="text-xs text-gray-500">Followers</div>
-  </div>
-  <div>
-    <div class="text-lg font-bold">0</div>
-    <div class="text-xs text-gray-500">Following</div>
+    {{ form.department.label_tag }}
+    {{ form.department }}
   </div>
 </div>
 
+<div>
+  {{ form.subject.label_tag }}
+  {{ form.subject }}
+</div>
 
+<div>
+  {{ form.bio.label_tag }}
+  {{ form.bio }}
+</div>
+
+
+
+
+
+
+      <div class="text-center">
+        <button type="submit" class="px-5 py-2 bg-black text-white rounded hover:bg-gray-800 transition">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const editBtn   = document.getElementById("edit-toggle");
+  const form      = document.querySelector("form");
+ 
+  const avatarInput = form.querySelector("#id_avatar");
+  const avatarLabel = document.getElementById("avatar-change-label");
+
+// শুরুতেই Change Photo হাইড থাকবে
+if (avatarLabel) avatarLabel.classList.add("hidden");
+if (avatarInput) avatarInput.setAttribute("disabled", "disabled");
+
+
+ 
+  const fields    = [
+    form.querySelector("#id_university"),
+    form.querySelector("#id_department"),
+    form.querySelector("#id_subject"),
+    form.querySelector("#id_bio")
+  ].filter(Boolean);
+  const submitBtn = form.querySelector('button[type="submit"]');
+
+  // শুরুতে: ফর্ম readonly, submit বাটন লুকানো
+  submitBtn.classList.add("hidden");
+
+  function setDisabled(disabled) {
+    fields.forEach(f => f && f.toggleAttribute("disabled", disabled));
+    submitBtn.classList.toggle("hidden", disabled);
+    
+    if (avatarInput) avatarInput.toggleAttribute("disabled", disabled);
+    if (avatarLabel) avatarLabel.classList.toggle("hidden", disabled);
+
+  }
+
+  // Edit টগল
+  editBtn.addEventListener("click", function () {
+    const nowDisabled = fields[0]?.hasAttribute("disabled");
+    // যদি disabled থাকে → enable করো; নাহলে আবার disable
+    setDisabled(!nowDisabled);
+    editBtn.textContent = nowDisabled ? "Cancel" : "Edit";
+    if (nowDisabled && fields[0]) fields[0].focus();
+  });
+});
+</script>
+
+
+  </div>
+</div>
 {% endblock %}

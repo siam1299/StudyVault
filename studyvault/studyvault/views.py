@@ -16,7 +16,7 @@ def home(request):
     )
     return render(request, "home.html", {"top_unis": top_unis})
 
-# ✅ নতুন ফাংশন
+
 @login_required
 def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
@@ -31,7 +31,7 @@ def profile_view(request, username):
         else:
             form = ProfileForm(instance=profile)
     else:
-        form = None  # অন্য ইউজার হলে শুধু দেখবে, এডিট করবে না
+        form = None
 
     return render(request, "accounts/profile.html", {
         "profile_user": profile_user,

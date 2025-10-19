@@ -1,7 +1,6 @@
 # materials/forms.py
 from django import forms
-from .models import Material
-from .models import Material, Comment
+from .models import Material, Comment, Category
 
 
 class MaterialForm(forms.ModelForm):
@@ -23,6 +22,12 @@ class MaterialForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # ✅ শুধু pdf / docx / pptx দেখাবে
+        allowed_slugs = ["pdf", "docx", "pptx"]
+        self.fields["category"].queryset = Category.objects.filter(slug__in=allowed_slugs).order_by("name")
+        self.fields["category"].empty_label = "----------"  # চাইলে রাখো
+
         # Optional: nice labels
         self.fields["title"].label = "Title"
         self.fields["description"].label = "Description"
@@ -30,6 +35,7 @@ class MaterialForm(forms.ModelForm):
         self.fields["department"].label = "Department"
         self.fields["semester"].label = "Semester/Year"
         self.fields["file"].label = "Upload file"
+
 
 # ⬇️ নতুন CommentForm (ব্রাউজ পেজে কমেন্ট পোস্ট করার জন্য)
 class CommentForm(forms.ModelForm):

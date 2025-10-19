@@ -5,8 +5,8 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required   # ✅ দরকার edit_profile এর জন্য
 
-from .models import UserProfile   # ✅ তোমার model
-from .forms import ProfileForm    # ✅ তোমার form
+from .models import UserProfile
+from .forms import ProfileForm
 
 def signup_view(request):
     if request.method == "POST":
@@ -44,15 +44,20 @@ def logout_view(request):
     return redirect('home')
 
 @login_required
-def edit_profile(request):
-    profile = get_object_or_404(UserProfile, user=request.user)
+def my_profile(request):
+    # প্রোফাইল না থাকলে বানিয়ে দিই
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            return redirect("profile", username=request.user.username)
+            messages.success(request, "✅ Profile updated successfully!")
+            return redirect("my_profile")  # একই পেইজে ফিরে আসবে
     else:
         form = ProfileForm(instance=profile)
 
-    return render(request, "accounts/edit_profile.html", {"form": form})
+    return render(request, "accounts/profile.html", {
+        "form": form,
+        "profile": profile,
+    })

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import MaterialForm
 from django.core.paginator import Paginator
-from .models import Material, University
+from .models import Material, University, Category
 from django.http import JsonResponse
 from .models import Material, Upvote
 from .models import Downvote
@@ -15,6 +15,9 @@ from .forms import CommentForm
 from .models import Comment
 from django.db.models import F
 import mimetypes, os
+from django.db.models import Q
+
+
 
 
 
@@ -34,17 +37,20 @@ def upload_material(request):
     return render(request, "materials/upload.html", {"form": form})
 
 def browse_materials(request):
-    qs = Material.objects.all().select_related("category", "department", "semester", "uploader")
+    # base queryset
+    qs = Material.objects.all().select_related(
+        "category", "department", "semester", "uploader"
+    )
 
-    # Search
+    # ------- Search -------
     q = request.GET.get("q")
     if q:
         qs = qs.filter(title__icontains=q) | qs.filter(description__icontains=q)
 
-    # Filter by category/department/semester
-    category = request.GET.get("category")
-    if category:
-        qs = qs.filter(category__id=category)
+    # ------- Route params (optional) -------
+    category_id = request.GET.get("category")
+    if category_id:
+        qs = qs.filter(category__id=category_id)
 
     department = request.GET.get("department")
     if department:
@@ -54,20 +60,42 @@ def browse_materials(request):
     if semester:
         qs = qs.filter(semester__id=semester)
 
-    # ✅ NEW: university filter
     university = request.GET.get("university")
     if university:
         qs = qs.filter(university__id=university)
 
-    # Pagination
-    paginator = Paginator(qs, 10)  # প্রতি পেইজে ১০টা ফাইল
+    # ------- NEW: kind filter (pdf/docx/pptx) -------
+    file_kinds = ["pdf", "docx", "pptx"]
+    kind = (request.GET.get("kind") or "").lower()
+    if kind in file_kinds:
+        qs = qs.filter(
+            Q(category__slug=kind) |
+            Q(file__iendswith=f".{kind}")
+        )
+
+    # ------- Pills data (show only pdf/docx/pptx) -------
+    core_slugs = ["pdf", "docx", "pptx"]          # <<-- এখানে ডিফাইন
+    core_categories_qs = Category.objects.filter(
+        slug__in=core_slugs
+    ).only("id", "name", "slug")
+
+    # order: pdf, docx, pptx
+    slug_order_map = {s: i for i, s in enumerate(core_slugs)}
+    core_categories = sorted(
+        core_categories_qs, key=lambda c: slug_order_map.get(c.slug, 999)
+    )
+
+    # ------- Pagination -------
+    paginator = Paginator(qs, 10)
     page = request.GET.get("page")
     materials = paginator.get_page(page)
 
-    context = {
+    return render(request, "materials/browse.html", {
         "materials": materials,
-    }
-    return render(request, "materials/browse.html", context)
+        "core_categories": core_categories,  # pills-এর জন্য
+        "active_kind": kind,                 # কোনটা সিলেক্ট
+        "q": q or "",
+    })
 
 def universities_list(request):
     universities = University.objects.all().order_by("name")

@@ -17,6 +17,22 @@
     </button>
   </form>
 
+<!-- ✅ Filter by Category -->
+<div class="mb-6 flex flex-wrap gap-2 justify-center">
+  {% for cat in core_categories %}
+    <a href="?kind={{ cat.slug }}"
+       class="px-4 py-1.5 rounded-full border text-sm transition-all duration-150
+              {% if active_kind == cat.slug %}
+                bg-black text-white border-black shadow-sm
+              {% else %}
+                bg-white text-gray-700 border-gray-300 hover:bg-gray-100
+              {% endif %}">
+      {{ cat.name|capfirst }}
+    </a>
+  {% endfor %}
+</div>
+
+
     <!-- CSRF holder (hidden) -->
 <form id="csrf-holder" style="display:none;">{% csrf_token %}</form>
 

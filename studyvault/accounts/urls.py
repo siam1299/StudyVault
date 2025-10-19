@@ -28,6 +28,6 @@ urlpatterns = [
     ), name='password_reset_complete'),
 
     # ✅ নতুন edit profile route
-    path("edit/", views.edit_profile, name="edit_profile"),
+    path("edit/", views.my_profile, name="edit_profile"),
 
 ]
